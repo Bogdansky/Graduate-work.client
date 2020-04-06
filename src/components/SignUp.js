@@ -3,8 +3,7 @@ import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import TextField from '@material-ui/core/TextField';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Checkbox from '@material-ui/core/Checkbox';
+import Alert from '@material-ui/lab/Alert';
 import Link from '@material-ui/core/Link';
 import Grid from '@material-ui/core/Grid';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
@@ -12,12 +11,67 @@ import Typography from '@material-ui/core/Typography';
 import Container from '@material-ui/core/Container';
 
 export class SignUp extends React.Component {
-static displayName = SignUp.name;
+    static displayName = SignUp.name;
 
-constructor(props){
-    super(props);
-    
-}
+    constructor(props){
+        super(props);
+        
+        this.state = {
+            email: "",
+            password: "",
+            tryPassword: ""
+        };
+
+        this.onChange = this.onChange.bind(this);
+        this.onLogin = this.onLogin.bind(this);
+    }
+
+    onChange(e){
+        switch(e.target.name){
+            case "email": this.setState({email: e.target.value}); break;
+            case "password": this.setState({password: e.target.value});break;
+            default: break;
+        }
+    }
+
+    onLogin(){
+        let url = this.config.serverUrl + "/account/login";
+        let body = JSON.stringify({
+            "Login": this.state.email,
+            "Password": this.state.password
+        });
+        let options = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            mode: 'cors',
+            body
+        };
+
+        fetch(url, options).then(response => response.json(), rejected => {
+            if (rejected.status == 401){
+                let error = {
+                    title: "Ошибка входа", 
+                    description: "Неверный email или пароль. Возможно, вы не зарегистрированы"
+                };
+                this.setState({errors: [error]});
+            }
+        })
+        .then(data => {
+            console.log(data);
+            if (data.token){
+                localStorage.setItem("userId", data.userId);
+                localStorage.setItem("login", data.login);
+                localStorage.setItem("token", data.token);
+            } else {
+                this.setState({errors: [data.error]});
+            }
+        })
+        .catch(e => {
+            console.error(e);
+        });
+    }
 
   render(){
     return (
@@ -32,43 +86,23 @@ constructor(props){
               <LockOutlinedIcon />
             </Avatar>
             <Typography component="h1" variant="h5">
-              Sign up
+              Регистрация
             </Typography>
-            <form style={{
-                width: '100%'
-            }} noValidate>
+                if (this.state.errors.length){
+                    this.state.errors.forEach(e => <Alert severity="error" color="error" style={{width: "100%"}}>{e.title + ": " + e.description}</Alert>)
+                }
+            <div style={{ width: '100%' }}>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    autoComplete="fname"
-                    name="firstName"
-                    variant="outlined"
-                    required
-                    fullWidth
-                    id="firstName"
-                    label="First Name"
-                    autoFocus
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    variant="outlined"
-                    required
-                    fullWidth
-                    id="lastName"
-                    label="Last Name"
-                    name="lastName"
-                    autoComplete="lname"
-                  />
-                </Grid>
                 <Grid item xs={12}>
                   <TextField
                     variant="outlined"
                     required
                     fullWidth
+                    color="white"
                     id="email"
-                    label="Email Address"
+                    label="Электронная почта"
                     name="email"
+                    onChange={this.onChange}
                     autoComplete="email"
                   />
                 </Grid>
@@ -78,29 +112,40 @@ constructor(props){
                     required
                     fullWidth
                     name="password"
-                    label="Password"
+                    label="Пароль"
                     type="password"
                     id="password"
-                    autoComplete="current-password"
+                    onChange={this.onChange}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    variant="outlined"
+                    required
+                    fullWidth
+                    name="tryPassword"
+                    label="Повторите пароль"
+                    type="password"
+                    id="tryPassword"
+                    onChange={this.onChange}
                   />
                 </Grid>
               </Grid>
               <Button
-                type="submit"
                 fullWidth
                 variant="contained"
                 color="primary"
               >
-                Sign Up
+                Зарегистрироваться
               </Button>
               <Grid container justify="flex-end">
                 <Grid item>
                   <Link href="/login" variant="body2">
-                    Already have an account? Sign in
+                    Уже есть аккаунт? Зайти
                   </Link>
                 </Grid>
               </Grid>
-            </form>
+            </div>
           </div>
         </Container>
       );

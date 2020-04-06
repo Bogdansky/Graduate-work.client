@@ -10,6 +10,7 @@ import { Button, Drawer, Link, Typography, IconButton, AppBar, Toolbar } from '@
 import MenuIcon from '@material-ui/icons/Menu';
 import './App.css';
 import { createBrowserHistory } from "history";
+import config from './config.json'
 
 const history = createBrowserHistory();
 
@@ -20,6 +21,8 @@ class App extends React.Component {
     this.state = {
       menuShow: false
     }
+
+    localStorage.setItem("config", JSON.stringify(config));
 
     this.changeShow = this.changeShow.bind(this);
   }
@@ -37,13 +40,9 @@ class App extends React.Component {
               <IconButton edge="start" color="inherit" aria-label="menu" onClick={this.changeShow}>
                 <MenuIcon />
               </IconButton>
-              <Typography variant="h6">
-                News
-              </Typography>
-              <Link color="inherit">Login</Link>
             </Toolbar>
           </AppBar>
-          <Drawer anchor="left" open={this.state.menuShow} onClose={this.changeShow}>
+          <Drawer open={this.state.menuShow} onClose={this.changeShow}>
             <Router history={history}>
               <Link variant="button" onClick={this.changeShow} to="/">Главная</Link>
               <Link variant="button" onClick={this.changeShow} to="/about">О программе</Link>

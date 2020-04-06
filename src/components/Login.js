@@ -19,15 +19,67 @@ export class Login extends React.Component {
         super(props);
 
         this.state = {
+            email: "",
+            password: "",
             success: false,
             errors: []
         };
+        this.config = JSON.parse(localStorage.getItem("config"));
 
         this.onLogin = this.onLogin.bind(this);
+        this.onChange = this.onChange.bind(this);
+    }
+
+    onChange(e){
+        switch(e.target.name){
+            case "email": this.setState({email: e.target.value}); break;
+            case "password": this.setState({password: e.target.value});break;
+            default: break;
+        }
     }
 
     onLogin(){
+        let url = this.config.serverUrl + "/account/login";
+        let body = JSON.stringify({
+            "Login": this.state.email,
+            "Password": this.state.password
+        });
+        let options = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            mode: 'cors',
+            body
+        };
 
+        fetch(url, options).then(response => response.json(), rejected => {
+            if (rejected.status == 401){
+                let error = {
+                    title: "Ошибка входа", 
+                    description: "Неверный email или пароль. Возможно, вы не зарегистрированы"
+                };
+                this.setState({errors: [error]});
+            }
+        })
+        .then(data => {
+            console.log(data);
+            if (data.token){
+                localStorage.setItem("userId", data.userId);
+                localStorage.setItem("login", data.login);
+                localStorage.setItem("token", data.token);
+
+                this.setState({
+                    success: true,
+                    errors: []
+                });
+            } else {
+                this.setState({errors: [data.error]});
+            }
+        })
+        .catch(e => {
+            console.error(e);
+        });
     }
 
     render(){
@@ -43,9 +95,9 @@ export class Login extends React.Component {
                 <LockOutlinedIcon />
                 </Avatar>
                 <Typography component="h1" variant="h5">
-                Sign in
+                Вход
                 </Typography>
-                <form style={{
+                <div style={{
                     width: '100%'
                 }} noValidate>
                 <TextField
@@ -54,8 +106,9 @@ export class Login extends React.Component {
                     required
                     fullWidth
                     id="email"
-                    label="Email Address"
+                    label="Электронная почта"
                     name="email"
+                    onChange={this.onChange}
                     autoComplete="email"
                     autoFocus
                 />
@@ -65,36 +118,32 @@ export class Login extends React.Component {
                     required
                     fullWidth
                     name="password"
-                    label="Password"
+                    label="Пароль"
                     type="password"
                     id="password"
+                    onChange={this.onChange}
                     autoComplete="current-password"
                 />
-                <FormControlLabel
-                    control={<Checkbox value="remember" color="primary" />}
-                    label="Remember me"
-                />
+                
                 <Button
                     type="submit"
                     fullWidth
                     variant="contained"
                     color="primary"
+                    onClick={this.onLogin}
                 >
-                    Sign In
+                    Войти
                 </Button>
                 <Grid container>
                     <Grid item xs>
-                    <Link href="#" variant="body2">
-                        Forgot password?
-                    </Link>
                     </Grid>
                     <Grid item>
-                    <Link href="/signup" variant="body2">
-                        {"Don't have an account? Sign Up"}
+                    <Link href="/signup" variant="body1">
+                        {"Нет аккаунта? Зарегистрируйте"}
                     </Link>
                     </Grid>
                 </Grid>
-                </form>
+                </div>
             </div>
         </Container>
         );
