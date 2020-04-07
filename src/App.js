@@ -46,6 +46,8 @@ class App extends React.Component {
             <Router history={history}>
               <Link variant="button" onClick={this.changeShow} to="/">Главная</Link>
               <Link variant="button" onClick={this.changeShow} to="/about">О программе</Link>
+              <Link variant="button" onClick={this.changeShow} to="/login">Войти</Link>
+              <Link variant="button" onClick={this.changeShow} to="/signup">Зарегистрироваться</Link>
             </Router>
           </Drawer>
           <Router history={history}>

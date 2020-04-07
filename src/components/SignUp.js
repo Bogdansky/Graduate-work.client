@@ -9,6 +9,7 @@ import Grid from '@material-ui/core/Grid';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import Container from '@material-ui/core/Container';
+import Error from '../components/common/Error'
 
 export class SignUp extends React.Component {
     static displayName = SignUp.name;
@@ -21,9 +22,11 @@ export class SignUp extends React.Component {
             password: "",
             tryPassword: ""
         };
+        
+        this.config = JSON.parse(localStorage.getItem("config"));
 
         this.onChange = this.onChange.bind(this);
-        this.onLogin = this.onLogin.bind(this);
+        this.onSignUp = this.onSignUp.bind(this);
     }
 
     onChange(e){
@@ -34,8 +37,12 @@ export class SignUp extends React.Component {
         }
     }
 
-    onLogin(){
+    onSignUp(){
         let url = this.config.serverUrl + "/account/login";
+        if (this.state.password == this.state.tryPassword){
+            this.setState({errors: [{description: "Пароли не совпадают!"}]});
+            return;
+        }
         let body = JSON.stringify({
             "Login": this.state.email,
             "Password": this.state.password
@@ -88,9 +95,7 @@ export class SignUp extends React.Component {
             <Typography component="h1" variant="h5">
               Регистрация
             </Typography>
-                if (this.state.errors.length){
-                    this.state.errors.forEach(e => <Alert severity="error" color="error" style={{width: "100%"}}>{e.title + ": " + e.description}</Alert>)
-                }
+            <Error data={this.state.errors} />
             <div style={{ width: '100%' }}>
               <Grid container spacing={2}>
                 <Grid item xs={12}>
@@ -135,6 +140,7 @@ export class SignUp extends React.Component {
                 fullWidth
                 variant="contained"
                 color="primary"
+                onClick={this.onSignUp}
               >
                 Зарегистрироваться
               </Button>
