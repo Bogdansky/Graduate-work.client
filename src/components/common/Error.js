@@ -11,7 +11,7 @@ export default class Error extends React.Component {
     render(){
         if (this.props.data && this.props.data.length){
         return <Alert color="error" severity="error" style={{width: '100%'}}>{this.props.data.map(e => {
-            return <p>{e.title ? <strong>{e.title}: </strong> : ''}{e.description}</p>
+            return <p>{e.title ? <strong>{e.title || e.header}: </strong> : ''}{e.description || e.text}</p>
         })}</Alert>
         }
         return '';

@@ -3,7 +3,7 @@ import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import TextField from '@material-ui/core/TextField';
-import Alert from '@material-ui/lab/Alert';
+import { Redirect } from 'react-router-dom';
 import Link from '@material-ui/core/Link';
 import Grid from '@material-ui/core/Grid';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
@@ -20,7 +20,8 @@ export class SignUp extends React.Component {
         this.state = {
             email: "",
             password: "",
-            tryPassword: ""
+            tryPassword: "",
+            success: false
         };
         
         this.config = JSON.parse(localStorage.getItem("config"));
@@ -32,55 +33,62 @@ export class SignUp extends React.Component {
     onChange(e){
         switch(e.target.name){
             case "email": this.setState({email: e.target.value}); break;
-            case "password": this.setState({password: e.target.value});break;
+            case "password": this.setState({password: e.target.value}); break;
             default: break;
         }
     }
 
     onSignUp(){
-        let url = this.config.serverUrl + "/account/login";
-        if (this.state.password == this.state.tryPassword){
+        let url = this.config.serverUrl + "/account/";
+        this.setState({errors: []}, function(){
+          if (this.state.password == this.state.tryPassword){
             this.setState({errors: [{description: "Пароли не совпадают!"}]});
             return;
-        }
-        let body = JSON.stringify({
-            "Login": this.state.email,
-            "Password": this.state.password
-        });
-        let options = {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            mode: 'cors',
-            body
-        };
+          }
+          let body = JSON.stringify({
+              "Login": this.state.email,
+              "Password": this.state.password
+          });
+          let options = {
+              method: "POST",
+              headers: {
+                  "Content-Type": "application/json"
+              },
+              mode: 'cors',
+              body
+          };
 
-        fetch(url, options).then(response => response.json(), rejected => {
-            if (rejected.status == 401){
-                let error = {
-                    title: "Ошибка входа", 
-                    description: "Неверный email или пароль. Возможно, вы не зарегистрированы"
-                };
-                this.setState({errors: [error]});
-            }
-        })
-        .then(data => {
-            console.log(data);
-            if (data.token){
-                localStorage.setItem("userId", data.userId);
-                localStorage.setItem("login", data.login);
-                localStorage.setItem("token", data.token);
-            } else {
-                this.setState({errors: [data.error]});
-            }
-        })
-        .catch(e => {
-            console.error(e);
+          fetch(url, options).then(response => response.json(), rejected => {
+              if (rejected.status == 401){
+                  let error = {
+                      title: "Ошибка входа", 
+                      description: "Неверный email или пароль. Возможно, вы не зарегистрированы"
+                  };
+                  this.setState({errors: [error]});
+              }
+          })
+          .then(data => {
+              console.log(data);
+              if (data.token){
+                  localStorage.setItem("userId", data.userId);
+                  localStorage.setItem("login", data.login);
+                  localStorage.setItem("token", data.token);
+
+                  this.setState({success: true, errors: []});
+              } else {
+                  this.setState({errors: [data.error]});
+              }
+          })
+          .catch(e => {
+              console.error(e);
+          });
         });
     }
 
   render(){
+    if (this.state.success)
+      return <Redirect to="/" from="/signup"/>
+      
     return (
         <Container component="main" maxWidth="xs">
           <CssBaseline />

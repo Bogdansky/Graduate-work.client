@@ -7,7 +7,8 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import Link from '@material-ui/core/Link';
 import Grid from '@material-ui/core/Grid';
-import Box from '@material-ui/core/Box';
+import Error from '../components/common/Error';
+import { Redirect } from 'react-router-dom';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import Container from '@material-ui/core/Container';
@@ -22,7 +23,7 @@ export class Login extends React.Component {
             email: "",
             password: "",
             success: false,
-            errors: []
+            errors: this.props.errors || []
         };
         this.config = JSON.parse(localStorage.getItem("config"));
 
@@ -83,6 +84,9 @@ export class Login extends React.Component {
     }
 
     render(){
+        if(this.state.success)
+            return <Redirect to="/" from="/login" />
+
         return (
         <Container component="main" maxWidth="xs">
             <CssBaseline />
@@ -97,6 +101,7 @@ export class Login extends React.Component {
                 <Typography component="h1" variant="h5">
                 Вход
                 </Typography>
+                <Error data={this.state.errors} />
                 <div style={{
                     width: '100%'
                 }} noValidate>
