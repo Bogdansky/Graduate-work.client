@@ -6,8 +6,16 @@ import { About } from './components/Info/About'
 import { NotFound } from './components/Info/NotFound'
 import { Login } from './components/Login'
 import { SignUp } from './components/SignUp'
-import { Button, Drawer, Link, Typography, IconButton, AppBar, Toolbar } from '@material-ui/core'
+import { Projects } from './components/Projects'
+import Board from './components/Board'
+import Statistics from './components/Statistics'
+import { Button, Drawer, Link, Typography, IconButton, AppBar, Toolbar, MenuItem } from '@material-ui/core'
+import DoubleArrowOutlinedIcon from '@material-ui/icons/DoubleArrowOutlined';
 import MenuIcon from '@material-ui/icons/Menu';
+import ComputerIcon from '@material-ui/icons/Computer'
+import InputIcon from '@material-ui/icons/Input';
+import PersonAddIcon from '@material-ui/icons/PersonAdd';
+import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
 import './App.css';
 import { createBrowserHistory } from "history";
 import config from './config.json'
@@ -19,12 +27,52 @@ class App extends React.Component {
     super(props);
 
     this.state = {
-      menuShow: false
+      menuShow: false,
+      roles: [],
+      expanded: false
     }
 
     localStorage.setItem("config", JSON.stringify(config));
 
+    this.setRoles = this.setRoles.bind(this);
     this.changeShow = this.changeShow.bind(this);
+    this.getAuthorizationError = this.getAuthorizationError.bind(this);
+    this.toggleExpanded = this.toggleExpanded.bind(this);
+  }
+
+  toggleExpanded(){
+    let {expanded} = this.state;
+    this.setState({expanded: !expanded}) 
+  }
+
+  setRoles(value){
+    this.roles = value;
+  }
+
+  componentWillMount(){
+    let url = config.serverUrl + "/employee/roles";
+
+    let options = {
+      method: "GET",
+      headers: {
+          "Content-Type": "application/json"
+      },
+      mode: 'cors'
+    };
+    
+    fetch(url,options).then(response => response.json(), rejected => {
+        if (rejected.status == 401){
+            let error = {
+                title: "Ошибка входа", 
+                description: "Неверный email или пароль. Возможно, вы не зарегистрированы"
+            };
+            this.setState({errors: [error]});
+        }
+    })
+    .then(data => this.setState({roles: data.result}))
+    .catch(e => {
+        console.error(e);
+    });
   }
 
   changeShow(){
@@ -32,9 +80,19 @@ class App extends React.Component {
     this.setState({menuShow: !show});
   }
 
+  checkLocalStorage(){
+    let userId = localStorage.getItem("userId");
+    return !!userId;
+  }
+
+  getAuthorizationError(){
+    return <Login errors={[{text: "Вы не авторизованы"}]} />;
+  }
+
   render(){
     return (
       <div className="App">
+        <Router history={history}>
           <AppBar position="static">
             <Toolbar>
               <IconButton edge="start" color="inherit" aria-label="menu" onClick={this.changeShow}>
@@ -43,25 +101,27 @@ class App extends React.Component {
             </Toolbar>
           </AppBar>
           <Drawer open={this.state.menuShow} onClose={this.changeShow}>
-            <Router history={history}>
-              <Link variant="button" onClick={this.changeShow} to="/">Главная</Link>
-              <Link variant="button" onClick={this.changeShow} to="/about">О программе</Link>
-              <Link variant="button" onClick={this.changeShow} to="/login">Войти</Link>
-              <Link variant="button" onClick={this.changeShow} to="/signup">Зарегистрироваться</Link>
-            </Router>
+            <MenuItem><DoubleArrowOutlinedIcon color="primary" className={this.state.expanded ? "expand-arrows" : "expand-arrows rotate-right"} onClick={this.toggleExpanded}/></MenuItem>
+            <MenuItem>
+              <Link className="App-link" onClick={this.changeShow} href="/"><ComputerIcon/>{this.state.expanded ? "Главная" : ""}</Link>
+            </MenuItem>
+            <MenuItem>
+              <Link className="App-link" onClick={this.changeShow} href="/about"><InfoOutlinedIcon/>{this.state.expanded ? "О программе" : ""}</Link>
+            </MenuItem>
+            <MenuItem><Link className="App-link" onClick={this.changeShow} href="/signup"><PersonAddIcon/>{this.state.expanded ? "Зарегистрироваться" : ""}</Link></MenuItem>
+            <MenuItem><Link className="App-link" onClick={this.changeShow} href="/login"><InputIcon/>{this.state.expanded ? "Войти" : ""}</Link></MenuItem>
           </Drawer>
-          <Router history={history}>
-            <Switch>
-              <Route exact path="/" component={Main} />
-              <Route path="/projects" />
-              <Route path="/board" />
-              <Route path="/statistics" />
-              <Route path="/about" component={About} />
-              <Route path="/login" component={Login} />
-              <Route path="/signup" component={SignUp} />
-              <Route component={NotFound} />
-            </Switch>
-          </Router>
+          <Switch>
+            <Route exact path="/" render={props => this.checkLocalStorage() ? <Main serverUrl={config.serverUrl} roles={this.state.roles}/> : this.getAuthorizationError()} />
+            <Route path="/projects" render={props => this.checkLocalStorage() ? <Projects serverUrl={config.serverUrl} /> : this.getAuthorizationError()} />
+            <Route path="/board" render={props => this.checkLocalStorage() ? <Board serverUrl={config.serverUrl} /> : this.getAuthorizationError()}/>
+            <Route path="/statistics" render={props => this.checkLocalStorage() ? <Statistics serverUrl={config.serverUrl} /> : this.getAuthorizationError()} />
+            <Route path="/about" component={About} />
+            <Route path="/login" component={Login} />
+            <Route path="/signup" component={SignUp} />
+            <Route component={NotFound} />
+          </Switch>
+        </Router>
       </div>
     );
   }

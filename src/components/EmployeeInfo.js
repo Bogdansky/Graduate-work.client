@@ -11,8 +11,9 @@ import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import Grid from '@material-ui/core/Grid';
-import {MuiPickersUtilsProvider,DatePicker} from '@material-ui/pickers';
+import {MuiPickersUtilsProvider,KeyboardDatePicker} from '@material-ui/pickers';
 import DateFnsUtils from '@date-io/date-fns';
+import moment from 'moment'
 
 export default class EmployeeInfo extends React.Component {
 
@@ -32,10 +33,17 @@ export default class EmployeeInfo extends React.Component {
         this.handleClose = this.handleClose.bind(this);
         this.onInfoChange = this.onInfoChange.bind(this);
         this.sendUpdate = this.sendUpdate.bind(this);
+        this.setBirthday = this.setBirthday.bind(this);
     }
 
-    componentDidMount(){
-        
+    componentWillReceiveProps(nextProps){
+        this.setState({
+            firstName: nextProps.info.firstName, 
+            secondName: nextProps.info.secondName, 
+            patronymic: nextProps.info.patronymic,
+            role: nextProps.info.roleId,
+            birthday: nextProps.info.birthday
+        });
     }
 
     handleClickOpen(){
@@ -52,7 +60,8 @@ export default class EmployeeInfo extends React.Component {
             firstName: this.state.firstName,
             secondName: this.state.secondName,
             patronymic: this.state.patronymic,
-            roleId: this.state.role
+            roleId: this.state.role,
+            birthday: this.state.birthday
         });
 
         let options = {
@@ -74,7 +83,7 @@ export default class EmployeeInfo extends React.Component {
             }
         })
         .then(data => {
-            this.setState({open: false});
+            this.setState({open: false}, this.props.updateInfo(data.result));
         })
         .catch(e => {
             console.error(e);
@@ -82,6 +91,7 @@ export default class EmployeeInfo extends React.Component {
     }
 
     onInfoChange(e){
+        debugger
         let value = e.target.value;
         switch(e.target.name){
             case "first": 
@@ -96,10 +106,11 @@ export default class EmployeeInfo extends React.Component {
             case "role":
                 this.setState({role: value});
                 break;
-            case "birthday":
-                this.setState({birthday: value});
-                break;
         }
+    }
+
+    setBirthday(value){
+        this.setState({birthday: value});
     }
 
   render() {
@@ -119,6 +130,8 @@ export default class EmployeeInfo extends React.Component {
             margin="dense"
             label="Имя"
             name="first"
+            type="text"
+            value={this.state.firstName}
             fullWidth
             onChange={this.onInfoChange}
             />
@@ -127,6 +140,8 @@ export default class EmployeeInfo extends React.Component {
             margin="dense"
             label="Фамилия"
             name="second"
+            type="text"
+            value={this.state.secondName}
             onChange={this.onInfoChange}
             fullWidth
             />
@@ -135,6 +150,8 @@ export default class EmployeeInfo extends React.Component {
             margin="dense"
             label="Отчество"
             name="patronymic"
+            type="text"
+            value={this.state.patronymic}
             onChange={this.onInfoChange}
             fullWidth
             />
@@ -142,6 +159,7 @@ export default class EmployeeInfo extends React.Component {
                 <InputLabel>Роль</InputLabel>
                 <Select name="role"
                 onChange={this.onInfoChange}
+                value={this.state.role}
                 >
                     {this.props.roles.map(r => {
                         return <MenuItem value={r.id}>{r.name}</MenuItem>
@@ -149,13 +167,14 @@ export default class EmployeeInfo extends React.Component {
                 </Select>
             </FormControl>
             <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                <DatePicker
+                <KeyboardDatePicker
                     margin="normal"
                     id="date-picker-dialog"
                     label="Date picker dialog"
-                    format="MM/dd/yyyy"
+                    format="dd.MM.yyyy"
                     name="birthday"
-                    onChange={this.onInfoChange}
+                    value={this.state.birthday}
+                    onChange={this.setBirthday}
                     KeyboardButtonProps={{
                         'aria-label': 'change date',
                     }}

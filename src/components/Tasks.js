@@ -1,25 +1,25 @@
 import React from 'react';
-import Project from './Project'
+import Task from './Task'
 
-export class Projects extends React.Component {
-    static displayName = Projects.name;
+export class Tasks extends React.Component {
+    static displayName = Tasks.name;
 
     constructor(props){
         super(props);
 
         this.state = {
-            projects: [],
-            employeeId: this.props.employeeId || 0
+            tasks: this.props.tasks || [],
+            projectId: this.props.projectId || 0
         }
 
-        this.serverUrl = this.props.serverUrl || JSON.parse(localStorage.getItem("config")).serverUrl;
+        this.config = JSON.parse(localStorage.getItem("config"));
     }
 
     componentDidMount() {
         let employeeId = localStorage.getItem("employeeId");
         this.setState({employeeId});
 
-        let url = this.serverUrl + "/project?employeeId=" + employeeId;
+        let url = this.config.serverUrl + "/project?employeeId=" + employeeId;
 
         let options = {
             method: "GET",
@@ -39,7 +39,7 @@ export class Projects extends React.Component {
             }
         })
         .then(data => {
-            this.setState({projects: data.result});
+            this.setState({tasks: data.result});
         })
         .catch(e => {
             console.error(e);
@@ -47,10 +47,10 @@ export class Projects extends React.Component {
     }
 
     render() {
-        if (!this.state.projects.length){
-            return <h2>Вы не состоите ни в одном проекте!</h2>
+        if (!this.state.tasks.length){
+            return <h2>Нет заданий</h2>
         }
 
-        return this.state.projects.map(p => <Project serverUrl={this.serverUrl} {...p} />)
+        return this.state.tasks.map(t => <Task task={t} />)
     }
 }

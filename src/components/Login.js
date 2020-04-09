@@ -29,6 +29,7 @@ export class Login extends React.Component {
 
         this.onLogin = this.onLogin.bind(this);
         this.onChange = this.onChange.bind(this);
+        this.validate = this.validate.bind(this);
     }
 
     onChange(e){
@@ -39,7 +40,22 @@ export class Login extends React.Component {
         }
     }
 
+    validate(){
+        let errors = [];
+        let {email, password} = this.state;
+        if (!email || email == ""){
+            errors.push({text: "Поле \"Email\" не заполнено"});
+        }
+        if (!password || password == ""){
+            errors.push({text: "Поле \"Пароль\" не заполнено"})
+        }
+        this.setState({errors});
+        return !errors.length;
+    }
+
     onLogin(){
+        if (!this.validate()) return;
+        this.setState({errors: []});
         let url = this.config.serverUrl + "/account/login";
         let body = JSON.stringify({
             "Login": this.state.email,
@@ -54,14 +70,15 @@ export class Login extends React.Component {
             body
         };
 
-        fetch(url, options).then(response => response.json(), rejected => {
-            if (rejected.status == 401){
+        fetch(url, options).then(response => {
+            if (response.status == 401){
                 let error = {
                     title: "Ошибка входа", 
                     description: "Неверный email или пароль. Возможно, вы не зарегистрированы"
                 };
                 this.setState({errors: [error]});
             }
+            return response.json();
         })
         .then(data => {
             console.log(data);
