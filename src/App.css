@@ -1,6 +1,5 @@
 .App {
   text-align: center;
-  color: white !important;
 }
 
 .App-header {
@@ -31,8 +30,4 @@
 
 .rotate-right {
   transform: rotate(180deg);
-}
-
-.MuiPaper-root {
-  min-width: 450px;
 }

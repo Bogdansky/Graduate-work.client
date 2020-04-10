@@ -29,12 +29,13 @@ class App extends React.Component {
     this.state = {
       menuShow: false,
       roles: [],
+      taskTypes: [],
+      taskStatuses: [],
       expanded: false
     }
 
     localStorage.setItem("config", JSON.stringify(config));
 
-    this.setRoles = this.setRoles.bind(this);
     this.changeShow = this.changeShow.bind(this);
     this.getAuthorizationError = this.getAuthorizationError.bind(this);
     this.toggleExpanded = this.toggleExpanded.bind(this);
@@ -45,12 +46,13 @@ class App extends React.Component {
     this.setState({expanded: !expanded}) 
   }
 
-  setRoles(value){
-    this.roles = value;
-  }
-
   componentWillMount(){
-    let url = config.serverUrl + "/employee/roles";
+    let {roles, taskTypes, taskStatuses} = this.state;
+
+    if (roles.length && taskTypes.length && taskStatuses.length)
+      return;
+
+    let url = config.serverUrl + "/employee/enums";
 
     let options = {
       method: "GET",
@@ -69,7 +71,11 @@ class App extends React.Component {
             this.setState({errors: [error]});
         }
     })
-    .then(data => this.setState({roles: data.result}))
+    .then(data => this.setState({
+      roles: data.result.roles, 
+      taskTypes: data.result.taskTypes, 
+      taskStatuses: data.result.taskStatuses
+    }))
     .catch(e => {
         console.error(e);
     });
@@ -114,7 +120,7 @@ class App extends React.Component {
           <Switch>
             <Route exact path="/" render={props => this.checkLocalStorage() ? <Main serverUrl={config.serverUrl} roles={this.state.roles}/> : this.getAuthorizationError()} />
             <Route path="/projects" render={props => this.checkLocalStorage() ? <Projects serverUrl={config.serverUrl} /> : this.getAuthorizationError()} />
-            <Route path="/board" render={props => this.checkLocalStorage() ? <Board serverUrl={config.serverUrl} /> : this.getAuthorizationError()}/>
+            <Route path="/board" render={props => this.checkLocalStorage() ? <Board serverUrl={config.serverUrl} taskTypes={this.state.taskTypes} taskStatuses={this.state.taskStatuses} /> : this.getAuthorizationError()}/>
             <Route path="/statistics" render={props => this.checkLocalStorage() ? <Statistics serverUrl={config.serverUrl} /> : this.getAuthorizationError()} />
             <Route path="/about" component={About} />
             <Route path="/login" component={Login} />

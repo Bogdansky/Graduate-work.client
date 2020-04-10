@@ -1,4 +1,5 @@
 import React from 'react';
+import { Redirect } from 'react-router-dom';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardMedia from '@material-ui/core/CardMedia';
@@ -29,12 +30,14 @@ export default class Project extends React.Component {
         super(props);
         this.state = {
             expanded: false,
-            isAdmin: this.props.team.some(t => t.employeeId==localStorage.getItem("employeeId") && t.isAdmin),
             actionMenuOpened: false,
+            redirectedToTasks: false,
+            isAdmin: this.props.team.some(t => t.employeeId==localStorage.getItem("employeeId") && t.isAdmin),
             anchorEl: null,
             employeeId: localStorage.getItem("employeeId")
         }
 
+        this.showTasks = this.showTasks.bind(this);
         this.handleExpandClick = this.handleExpandClick.bind(this);
         this.handleActionMenuClose = this.handleActionMenuClose.bind(this);
         this.handleActionMenuOpen = this.handleActionMenuOpen.bind(this);
@@ -50,6 +53,10 @@ export default class Project extends React.Component {
 
   handleActionMenuOpen(e){
       this.setState({actionMenuOpened: true, anchorEl: e.currentTarget});
+  }
+
+  showTasks(){
+      this.setState({redirectedToTasks: true})
   }
 
   render(){
@@ -73,6 +80,14 @@ export default class Project extends React.Component {
                             <MenuItem onClick={this.handleActionMenuClose}>Profile</MenuItem>
                             <MenuItem onClick={this.handleActionMenuClose}>
                                 <TeamView serverUrl={this.props.serverUrl} projectId={this.props.id} onExternalClose={this.handleActionMenuClose}/>
+                            </MenuItem>
+                            <MenuItem onClick={this.showTasks}>
+                                {this.state.redirectedToTasks ? <Redirect to={{
+                                    pathname: "/board",
+                                    state: {
+                                        projectId: this.props.id
+                                    }
+                                }} /> : <span>Посмотреть задания</span>}
                             </MenuItem>
                             {this.props.team.find(t => t.employeeId == this.state.employeeId && t.role == 11) ? <MenuItem onClick={this.handleActionMenuClose}>Удалить проект</MenuItem> : ""}
                         </Menu>

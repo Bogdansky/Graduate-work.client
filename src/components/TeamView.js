@@ -105,9 +105,7 @@ export default class TeamView extends React.Component {
     render(){
         return (
         <React.Fragment>
-            <Button variant="outlined" color="primary" onClick={this.handleOpen}>
-                Просмотреть команду
-            </Button>
+            <span onClick={this.handleOpen}>Просмотреть команду</span>
         <Dialog open={this.state.open} onClose={this.handleClose} aria-labelledby="form-dialog-title">
             <DialogTitle id="form-dialog-title">Команда</DialogTitle>
             <DialogContent>
