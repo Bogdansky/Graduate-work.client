@@ -1,5 +1,7 @@
 import React from 'react';
 import Project from './Project'
+import CreateProject from './CreateProject'
+import { Toolbar, AppBar, Grid, Paper } from '@material-ui/core';
 
 export class Projects extends React.Component {
     static displayName = Projects.name;
@@ -9,15 +11,18 @@ export class Projects extends React.Component {
 
         this.state = {
             projects: [],
-            employeeId: this.props.employeeId || 0
+            employeeId: this.props.employeeId || 0,
+            employee: null
         }
 
         this.serverUrl = this.props.serverUrl || JSON.parse(localStorage.getItem("config")).serverUrl;
+        this.addProject = this.addProject.bind(this);
     }
 
     componentDidMount() {
         let employeeId = localStorage.getItem("employeeId");
-        this.setState({employeeId});
+        let employee = JSON.parse(localStorage.getItem("employeeInfo"));
+        this.setState({employeeId,employee});
 
         let url = this.serverUrl + "/project?employeeId=" + employeeId;
 
@@ -46,11 +51,38 @@ export class Projects extends React.Component {
         });
     }
 
+    addProject(value){
+        let projects = this.state.projects;
+        projects.push(value);
+        this.setState({projects});
+    }
+
     render() {
         if (!this.state.projects.length){
             return <h2>Вы не состоите ни в одном проекте!</h2>
         }
-
-        return this.state.projects.map(p => <Project serverUrl={this.serverUrl} {...p} />)
+        return (
+            <React.Fragment>
+                {this.state.employee.roleId === 11 ? <AppBar color="transparent" position="relative">
+                    <Toolbar>
+                        <Grid container direction="row" spacing={3} style={{width: '100%'}} spacing={3}>
+                            <Grid item xs={2}>
+                                <CreateProject 
+                                    addProject={this.addProject}
+                                    serverUrl={this.props.serverUrl} 
+                                />
+                            </Grid>
+                        </Grid>
+                    </Toolbar>
+                </AppBar> : ""}
+                <Paper elevation={20}>
+                    <Grid container>
+                        <Grid container direction="row" item>
+                            {this.state.projects.map(p => <Project roles={this.props.roles} serverUrl={this.serverUrl} {...p} />)}
+                        </Grid>
+                    </Grid>
+                </Paper>
+            </React.Fragment>
+        );
     }
 }

@@ -14,6 +14,11 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import MenuItem from '@material-ui/core/MenuItem';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import Toolbar from '@material-ui/core/Toolbar'
+import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
+import Popover from '@material-ui/core/Popover';
+import Typography from '@material-ui/core/Typography'
 
 const columns = [
     { id: 'number', label: '№', minWidth: 10 },
@@ -29,6 +34,18 @@ const columns = [
       label: 'Администратор',
       minWidth: 170,
       align: 'right',
+    },
+    {
+      id: 'activeTasksCount',
+      label: 'Активные/Закрытые задачи',
+      minWidth: 170,
+      align: 'right',
+    },
+    {
+      id: 'rate',
+      label: 'Рейтинг',
+      minWidth: 170,
+      align: 'right',
     }
   ];
 
@@ -42,7 +59,10 @@ export default class TeamView extends React.Component {
             open: false,
             page: 0,
             rowsPerPage: 10,
-            rows: this.props.team || []
+            rows: this.props.team || [],
+            loading: false,
+            hintOpen: false,
+            anchorEl: null
         }
 
         this.handleOpen = this.handleOpen.bind(this);
@@ -51,6 +71,8 @@ export default class TeamView extends React.Component {
         this.setRowsPerPage = this.setRowsPerPage.bind(this);
         this.handleChangePage = this.handleChangePage.bind(this);
         this.handleChangeRowsPerPage = this.handleChangeRowsPerPage.bind(this);
+        this.handlePopoverOpen = this.handlePopoverOpen.bind(this);
+        this.handlePopoverClose = this.handlePopoverClose.bind(this);
     }
 
     setPage(value) {
@@ -71,6 +93,7 @@ export default class TeamView extends React.Component {
     };
 
     handleOpen(){
+        this.setState({loading: true});
         let url = this.props.serverUrl + `/project/${this.props.projectId}/employees`;
         let options = {
             method: "GET",
@@ -90,26 +113,58 @@ export default class TeamView extends React.Component {
                 this.setState({errors: [error]});
             }
         })
-        .then(data => {
-            this.setState({open: true, rows: data.result}, this.props.onExternalClose());
-        })
+        .then(data => this.setState({open: true, rows: data.result}, this.props.onExternalClose()))
         .catch(e => {
             console.error(e);
-        });
+        })
+        .finally(() => this.setState({loading: false}));
     }
 
     handleClose(){
         this.setState({open: false})
     }
 
+    handlePopoverOpen(e){
+        this.setState({hintOpen: true, anchorEl: e.currentTarget})
+    }
+
+    handlePopoverClose(){
+        this.setState({hintOpen: false, anchorEl: null})
+    }
+
     render(){
         return (
         <React.Fragment>
-            <span onClick={this.handleOpen}>Просмотреть команду</span>
-        <Dialog open={this.state.open} onClose={this.handleClose} aria-labelledby="form-dialog-title">
+            <span onClick={this.handleOpen} disabled={this.state.loading}>Просмотреть команду</span>
+            {this.state.laoding && <CircularProgress size={40} />}
+        <Dialog open={this.state.open} onClose={this.handleClose} maxWidth="xl" aria-labelledby="form-dialog-title">
             <DialogTitle id="form-dialog-title">Команда</DialogTitle>
             <DialogContent>
             <Paper>
+                <Toolbar>
+                    <Typography
+                    aria-owns={this.state.hintOpen ? 'mouse-over-popover' : undefined}
+                    aria-haspopup="true" onMouseEnter={this.handlePopoverOpen} onMouseLeave={this.handlePopoverClose}>
+                        <HelpOutlineIcon/>
+                    </Typography>
+                    <Popover
+                            id="mouse-over-popover"
+                            open={this.state.hintOpen}
+                            anchorEl={this.state.anchorEl}
+                            anchorOrigin={{
+                            vertical: 'bottom',
+                            horizontal: 'left',
+                            }}
+                            transformOrigin={{
+                            vertical: 'top',
+                            horizontal: 'left',
+                            }}
+                            onClose={this.handlePopoverClose}
+                            disableRestoreFocus
+                        >
+                            <Typography>I use Popover.</Typography>
+                        </Popover>
+                </Toolbar>
                 <TableContainer>
                     <Table stickyHeader aria-label="sticky table">
                         <TableHead>
@@ -133,21 +188,14 @@ export default class TeamView extends React.Component {
                                 <TableCell>{row.fullName}</TableCell>
                                 <TableCell>{row.role}</TableCell>
                                 <TableCell>{row.isAdmin ? "Да" : "Нет"}</TableCell>
+                                <TableCell>{row.activeTasksCount}/{row.closedTasksCount}</TableCell>
+                                <TableCell>{row.closedTasksCount ? row.rate + "%" : "Не известно"}</TableCell>
                             </TableRow>
                             );
                         })}
                         </TableBody>
                     </Table>
                 </TableContainer>
-                <TablePagination
-                rowsPerPageOptions={[10, 25, 100]}
-                component="div"
-                count={this.state.rows.length}
-                rowsPerPage={this.state.rowsPerPage}
-                page={this.state.page}
-                onChangePage={this.handleChangePage}
-                onChangeRowsPerPage={this.handleChangeRowsPerPage}
-                />
             </Paper>
             </DialogContent>
             </Dialog>

@@ -11,7 +11,6 @@ import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import Grid from '@material-ui/core/Grid';
-import {MuiPickersUtilsProvider,KeyboardDatePicker} from '@material-ui/pickers';
 import DateFnsUtils from '@date-io/date-fns';
 import moment from 'moment'
 
@@ -166,20 +165,6 @@ export default class EmployeeInfo extends React.Component {
                     })}
                 </Select>
             </FormControl>
-            <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                <KeyboardDatePicker
-                    margin="normal"
-                    id="date-picker-dialog"
-                    label="Date picker dialog"
-                    format="dd.MM.yyyy"
-                    name="birthday"
-                    value={this.state.birthday}
-                    onChange={this.setBirthday}
-                    KeyboardButtonProps={{
-                        'aria-label': 'change date',
-                    }}
-                    />
-            </MuiPickersUtilsProvider>
         </DialogContent>
         <DialogActions>
             <Button role="cancel" onClick={this.handleClose} color="primary">

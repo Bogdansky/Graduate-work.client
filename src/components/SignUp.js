@@ -28,6 +28,23 @@ export class SignUp extends React.Component {
 
         this.onChange = this.onChange.bind(this);
         this.onSignUp = this.onSignUp.bind(this);
+        this.validate = this.validate.bind(this);
+    }
+
+    validate(){
+      let errors = [];
+
+      if (!this.state.email || this.state.email === ""){
+        errors.push({description: "Поле \"Электронная почта\" не может быть пустым!"})
+      }
+      if (!this.state.password || this.state.password === ""){
+        errors.push({description: "Пароль не может быть пустым!"});
+      }
+      if (this.state.password != this.state.tryPassword){
+        errors.push({description: "Пароли не совпадают!"});
+      }
+      this.setState({errors});
+      return !errors.length;
     }
 
     onChange(e){
@@ -40,11 +57,11 @@ export class SignUp extends React.Component {
 
     onSignUp(){
         let url = this.config.serverUrl + "/account/";
+
+        if(!this.validate()) return;
+
         this.setState({errors: []}, function(){
-          if (this.state.password == this.state.tryPassword){
-            this.setState({errors: [{description: "Пароли не совпадают!"}]});
-            return;
-          }
+          
           let body = JSON.stringify({
               "Login": this.state.email,
               "Password": this.state.password
@@ -90,7 +107,7 @@ export class SignUp extends React.Component {
       return <Redirect to="/" from="/signup"/>
       
     return (
-        <Container component="main" maxWidth="xs">
+        <Container component="main" maxWidth="xs" style={{marginTop: 20}}>
           <CssBaseline />
           <div style={{
                 display: 'flex',
@@ -98,7 +115,7 @@ export class SignUp extends React.Component {
                 alignItems: 'center',
             }}>
             <Avatar>
-              <LockOutlinedIcon />
+              <LockOutlinedIcon style={{marginRight: 0}}/>
             </Avatar>
             <Typography component="h1" variant="h5">
               Регистрация

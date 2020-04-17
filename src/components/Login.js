@@ -105,7 +105,7 @@ export class Login extends React.Component {
             return <Redirect to="/" from="/login" />
 
         return (
-        <Container component="main" maxWidth="xs">
+        <Container component="main" maxWidth="xs" style={{marginTop: 20}}>
             <CssBaseline />
             <div style={{
             display: 'flex',
@@ -113,7 +113,7 @@ export class Login extends React.Component {
             alignItems: 'center',
             }}>
                 <Avatar>
-                <LockOutlinedIcon />
+                <LockOutlinedIcon style={{marginRight: 0}}/>
                 </Avatar>
                 <Typography component="h1" variant="h5">
                 Вход

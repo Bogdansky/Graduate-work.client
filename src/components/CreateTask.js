@@ -10,13 +10,10 @@ import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
-import Input from '@material-ui/core/Input';
-import Grid from '@material-ui/core/Grid';
-import {MuiPickersUtilsProvider,KeyboardDatePicker} from '@material-ui/pickers';
-import DateFnsUtils from '@date-io/date-fns';
-import moment from 'moment'
+import CircularProgress from '@material-ui/core/CircularProgress';
+import Error from './common/Error'
 
-export default class EmployeeInfo extends React.Component {
+export default class CreateTask extends React.Component {
 
     constructor(props){
         super(props);
@@ -30,13 +27,16 @@ export default class EmployeeInfo extends React.Component {
             recent: 3600000, 
             taskType: null,
             projects: [],
-            projectId: null
+            projectId: null,
+            employeeId: null,
+            errors: []
         }
 
         this.handleClickOpen = this.handleClickOpen.bind(this);
         this.handleClose = this.handleClose.bind(this);
         this.onInfoChange = this.onInfoChange.bind(this);
         this.create = this.create.bind(this);
+        this.validate = this.validate.bind(this);
     }
     
     handleClickOpen(){
@@ -47,7 +47,29 @@ export default class EmployeeInfo extends React.Component {
         this.setState({open: false});  
     }
 
+    validate(){
+        debugger
+        let errors = []; 
+        let errorMessages = {
+            title: this.state.title || {text: "Заголовок не задан"},
+            description: this.state.description || {text: "Описание на задано"},
+            effort: parseInt(this.state.effort) || {text: "Оценка должна быть больше нуля"},
+            taskType: this.state.taskType || {text: "Не задан тип задачи"},
+            projectId: this.state.projectId || {text: "Не выбран проект"},
+            severity: this.state.severity || {text: "Не задана важность"},
+            priority: parseInt(this.state.priority) || {text: "Не задан приоритет"}
+        }
+        for(let key in errorMessages){
+            if (errorMessages[key].text)
+                errors.push({text: errorMessages[key].text});
+        }
+        this.setState({errors});
+        return !errors.length;
+    }
+
     create(){
+        if (!this.validate()) return;
+
         let url = this.props.serverUrl + "/task/";
         let body = JSON.stringify({
             title: this.state.title,
@@ -57,7 +79,8 @@ export default class EmployeeInfo extends React.Component {
             taskType: this.state.taskType,
             projectId: this.state.projectId,
             severity: this.state.severity,
-            priority: this.state.priority
+            priority: this.state.priority,
+            employeeId: this.state.employeeId
         });
 
         let options = {
@@ -79,7 +102,9 @@ export default class EmployeeInfo extends React.Component {
             }
         })
         .then(data => {
-            this.setState({open: false}, this.props.updateInfo(data.result));
+            if (!data.error){
+                this.setState({open: false}, this.props.addTask(data.result));
+            }
         })
         .catch(e => {
             console.error(e);
@@ -105,10 +130,13 @@ export default class EmployeeInfo extends React.Component {
                 this.setState({effort: value * 3600000, recent: value * 3600000})
                 break;
             case "priority":
-                this.setState({priority: value});
+                this.setState({priority: parseInt(value)});
                 break;
             case "project":
                 this.setState({projectId: value});
+                break;
+            case "employee":
+                this.setState({employeeId: value});
                 break;
         }
     }
@@ -122,6 +150,18 @@ export default class EmployeeInfo extends React.Component {
         <Dialog open={this.state.open} onClose={this.handleClose} aria-labelledby="form-dialog-title">
         <DialogTitle id="form-dialog-title">Создание задания</DialogTitle>
         <DialogContent>
+            <Error data={this.state.errors} />
+            <FormControl>
+                <InputLabel>Тип</InputLabel>
+                <Select name="type"
+                onChange={this.onInfoChange}
+                value={this.state.taskType}
+                >
+                    {this.props.taskTypes.map(r => {
+                        return <MenuItem value={r.id}>{r.name}</MenuItem>
+                    })}
+                </Select>
+            </FormControl>
             <TextField
             autoFocus
             margin="dense"
@@ -180,17 +220,6 @@ export default class EmployeeInfo extends React.Component {
             fullWidth
             />
             <FormControl>
-                <InputLabel>Тип</InputLabel>
-                <Select name="type"
-                onChange={this.onInfoChange}
-                value={this.state.taskType}
-                >
-                    {this.props.taskTypes.map(r => {
-                        return <MenuItem value={r.id}>{r.name}</MenuItem>
-                    })}
-                </Select>
-            </FormControl>
-            <FormControl>
                 <InputLabel>Проект</InputLabel>
                 <Select name="project"
                 onChange={this.onInfoChange}
@@ -201,6 +230,17 @@ export default class EmployeeInfo extends React.Component {
                     })}
                 </Select>
             </FormControl>
+            {this.state.projectId ? <FormControl>
+                <InputLabel>Пользователь</InputLabel>
+                <Select name="employee"
+                onChange={this.onInfoChange}
+                value={this.state.employeeId}
+                >
+                    {this.props.teams.find(p => p.id == this.state.projectId).team.map(e => {
+                        return <MenuItem value={e.id}>{e.fullName || (`ФИО не задано (${this.props.roles.find(r => r.id == e.roleId).name})`)}</MenuItem>
+                    })}
+                </Select>
+            </FormControl> : ""}
         </DialogContent>
         <DialogActions>
             <Button role="cancel" onClick={this.handleClose} color="primary">
