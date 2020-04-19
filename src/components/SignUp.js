@@ -11,6 +11,8 @@ import Typography from '@material-ui/core/Typography';
 import Container from '@material-ui/core/Container';
 import Error from '../components/common/Error'
 
+import axios from 'axios'
+
 export class SignUp extends React.Component {
     static displayName = SignUp.name;
 
@@ -51,6 +53,7 @@ export class SignUp extends React.Component {
         switch(e.target.name){
             case "email": this.setState({email: e.target.value}); break;
             case "password": this.setState({password: e.target.value}); break;
+            case "tryPassword": this.setState({tryPassword: e.target.value}); break;
             default: break;
         }
     }
